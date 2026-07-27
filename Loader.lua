@@ -696,7 +696,7 @@ function AxisUI:CreateToggle(ParentFrame, Options)
         InteractBtn.MouseButton1Click:Connect(function() State = not State; Update(); Callback(State) end)
         Update()
     else
-        -- Default Pill Style Toggle (like image)
+        -- Default Pill Style Toggle (محدث)
         local Pill = Instance.new("Frame")
         Pill.Size = UDim2.new(0, 42, 0, 20)
         Pill.Position = UDim2.new(1, -14, 0.5, 0)
@@ -705,22 +705,46 @@ function AxisUI:CreateToggle(ParentFrame, Options)
         Pill.Parent = ToggleFrame
         Instance.new("UICorner", Pill).CornerRadius = UDim.new(1, 0)
 
+        -- الدائرة (Circle) - لونها يتغير حسب الحالة
         local Circle = Instance.new("Frame")
         Circle.Size = UDim2.new(0, 16, 0, 16)
+        -- الموقع يتغير حسب الحالة
         Circle.Position = State and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
         Circle.AnchorPoint = Vector2.new(0, 0.5)
-        Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        -- ✅ لما يكون ON: الدائرة سوداء | لما يكون OFF: الدائرة بيضاء
+        Circle.BackgroundColor3 = State and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
         Circle.Parent = Pill
         Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
 
+        -- ظل خفيف للدائرة (يخليها أحلى)
+        local CircleStroke = Instance.new("UIStroke", Circle)
+        CircleStroke.Color = State and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(200, 200, 200)
+        CircleStroke.Thickness = 0.5
+        CircleStroke.Transparency = 0.5
+
         local function Update()
+            -- لون الخلفية: ON = أبيض | OFF = رمادي داكن
             local targetBg = State and THEME.ToggleOn or THEME.ToggleOff
+            -- موقع الدائرة: ON = يمين | OFF = يسار
             local targetPos = State and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+            -- لون الدائرة: ON = أسود | OFF = أبيض
+            local targetCircleColor = State and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+            -- لون ظل الدائرة
+            local targetStrokeColor = State and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(200, 200, 200)
+
             TweenService:Create(Pill, TweenInfo.new(0.25), {BackgroundColor3 = targetBg}):Play()
-            TweenService:Create(Circle, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPos}):Play()
+            TweenService:Create(Circle, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Position = targetPos,
+                BackgroundColor3 = targetCircleColor
+            }):Play()
+            TweenService:Create(CircleStroke, TweenInfo.new(0.25), {Color = targetStrokeColor}):Play()
         end
 
-        InteractBtn.MouseButton1Click:Connect(function() State = not State; Update(); Callback(State) end)
+        InteractBtn.MouseButton1Click:Connect(function() 
+            State = not State
+            Update()
+            Callback(State)
+        end)
         Update()
     end
 
