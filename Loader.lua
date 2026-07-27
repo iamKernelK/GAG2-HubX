@@ -894,7 +894,6 @@ end
 -- ==========================================
 -- ⬇️ DROPDOWN MODULE
 -- ==========================================
-
 function AxisUI:CreateDropdown(ParentFrame, Options)
     local DName = Options.Name or "Dropdown"
     local OptionsList = Options.Options or {}
@@ -906,6 +905,7 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
     local IsOpen = false
     local FollowConnection = nil
 
+    -- Main Dropdown Button
     local DropdownFrame = Instance.new("TextButton")
     DropdownFrame.Name = DName .. "_Dropdown"
     DropdownFrame.Size = UDim2.new(1, 0, 0, 40)
@@ -921,6 +921,17 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
     Stroke.Thickness = 1
     Stroke.Transparency = 0.7
     Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+    -- Left Active Indicator Line (الخط الصغير على اليسار عند التشغيل/التحديد)
+    local ActiveIndicator = Instance.new("Frame", DropdownFrame)
+    ActiveIndicator.Name = "ActiveIndicator"
+    ActiveIndicator.Size = UDim2.new(0, 3, 0, 16)
+    ActiveIndicator.Position = UDim2.new(0, 0, 0.5, 0)
+    ActiveIndicator.AnchorPoint = Vector2.new(0, 0.5)
+    ActiveIndicator.BackgroundColor3 = THEME.Accent or Color3.fromRGB(255, 255, 255)
+    ActiveIndicator.BorderSizePixel = 0
+    ActiveIndicator.BackgroundTransparency = 1
+    Instance.new("UICorner", ActiveIndicator).CornerRadius = UDim.new(1, 0)
 
     local Title = Instance.new("TextLabel", DropdownFrame)
     Title.Size = UDim2.new(0.5, 0, 1, 0)
@@ -951,12 +962,12 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
     Arrow.ImageColor3 = THEME.TextSecondary
     Arrow.ScaleType = Enum.ScaleType.Fit
 
-    -- Floating List
+    -- Floating List (القائمة المنسدلة الطويلة مع حقل البحث)
     local ScreenGui = ParentFrame:FindFirstAncestorOfClass("ScreenGui")
     
     local FloatingFrame = Instance.new("Frame")
     FloatingFrame.Size = UDim2.new(0, 0, 0, 0)
-    FloatingFrame.BackgroundColor3 = THEME.DropdownBg
+    FloatingFrame.BackgroundColor3 = THEME.DropdownBg or THEME.BackgroundLight
     FloatingFrame.ZIndex = 100
     FloatingFrame.ClipsDescendants = true
     FloatingFrame.Visible = false
@@ -967,8 +978,34 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
     FloatStroke.Color = THEME.Border
     FloatStroke.Transparency = 0.5
 
+    -- Search Box Container (حقل البحث بالأعلى داخل القائمة)
+    local SearchContainer = Instance.new("Frame", FloatingFrame)
+    SearchContainer.Name = "SearchContainer"
+    SearchContainer.Size = UDim2.new(1, -12, 0, 32)
+    SearchContainer.Position = UDim2.new(0, 6, 0, 6)
+    SearchContainer.BackgroundColor3 = THEME.BackgroundDark or Color3.fromRGB(30, 30, 30)
+    SearchContainer.BackgroundTransparency = 0.5
+    SearchContainer.ZIndex = 101
+
+    Instance.new("UICorner", SearchContainer).CornerRadius = UDim.new(0, 4)
+
+    local SearchBox = Instance.new("TextBox", SearchContainer)
+    SearchBox.Size = UDim2.new(1, -12, 1, 0)
+    SearchBox.Position = UDim2.new(0, 6, 0, 0)
+    SearchBox.BackgroundTransparency = 1
+    SearchBox.PlaceholderText = "Search..."
+    SearchBox.PlaceholderColor3 = THEME.TextSecondary
+    SearchBox.Text = ""
+    SearchBox.TextColor3 = THEME.TextPrimary
+    SearchBox.Font = Enum.Font.GothamMedium
+    SearchBox.TextSize = 12
+    SearchBox.TextXAlignment = Enum.TextXAlignment.Left
+    SearchBox.ZIndex = 102
+
+    -- Scrolling Frame for Options (قائمة العناصر الطويلة)
     local Scroll = Instance.new("ScrollingFrame", FloatingFrame)
-    Scroll.Size = UDim2.new(1, 0, 1, 0)
+    Scroll.Size = UDim2.new(1, 0, 1, -44)
+    Scroll.Position = UDim2.new(0, 0, 0, 42)
     Scroll.BackgroundTransparency = 1
     Scroll.BorderSizePixel = 0
     Scroll.ScrollBarThickness = 2
@@ -980,19 +1017,22 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
     ListLayout.Padding = UDim.new(0, 2)
     ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    local ItemCount = math.clamp(#OptionsList, 1, 6)
-    local MaxHeight = (ItemCount * 30) + 4
+    local ExpandedHeight = 220 -- الطول الطويل للقائمة مثل الصورة المطلوبة
 
     local function UpdateValueText()
         if #SelectedOptions == 0 then
             ValueText.Text = "..."
             ValueText.TextColor3 = THEME.TextSecondary
-        elseif #SelectedOptions == 1 then
-            ValueText.Text = SelectedOptions[1]
-            ValueText.TextColor3 = THEME.TextPrimary
+            TweenService:Create(ActiveIndicator, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
         else
-            ValueText.Text = #SelectedOptions .. "/" .. Max .. " Selected"
-            ValueText.TextColor3 = THEME.TextPrimary
+            TweenService:Create(ActiveIndicator, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+            if #SelectedOptions == 1 then
+                ValueText.Text = SelectedOptions[1]
+                ValueText.TextColor3 = THEME.TextPrimary
+            else
+                ValueText.Text = #SelectedOptions .. "/" .. Max .. " Selected"
+                ValueText.TextColor3 = THEME.TextPrimary
+            end
         end
     end
 
@@ -1006,10 +1046,10 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
         end
     end
 
-    for i, option in ipairs(OptionsList) do
+    -- إنشاء أزرار الخيارات
+    for _, option in ipairs(OptionsList) do
         local OptBtn = Instance.new("TextButton", Scroll)
         OptBtn.Size = UDim2.new(1, -8, 0, 28)
-        OptBtn.Position = UDim2.new(0, 4, 0, 0)
         OptBtn.BackgroundTransparency = 1
         OptBtn.Text = "  " .. option
         OptBtn.TextColor3 = THEME.TextSecondary
@@ -1034,6 +1074,7 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
             if Max == 1 then
                 SelectedOptions = {option}
                 IsOpen = false
+                SearchBox.Text = ""
                 TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = 0}):Play()
                 TweenService:Create(FloatingFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, DropdownFrame.AbsoluteSize.X, 0, 0)}):Play()
                 task.delay(0.2, function() FloatingFrame.Visible = false end)
@@ -1054,6 +1095,23 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
         end)
     end
 
+    -- نظام البحث الفوري
+    SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        local query = string.lower(SearchBox.Text)
+        local visibleCount = 0
+
+        for _, data in ipairs(OptionButtons) do
+            if query == "" or string.find(string.lower(data.Text), query) then
+                data.Btn.Visible = true
+                visibleCount = visibleCount + 1
+            else
+                data.Btn.Visible = false
+            end
+        end
+
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, (visibleCount * 30) + 4)
+    end)
+
     local function UpdateFloatingPosition()
         if DropdownFrame.Parent then
             local absPos = DropdownFrame.AbsolutePosition
@@ -1071,9 +1129,10 @@ function AxisUI:CreateDropdown(ParentFrame, Options)
             TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = 180}):Play()
             FollowConnection = RunService.RenderStepped:Connect(UpdateFloatingPosition)
             FloatingFrame.Size = UDim2.new(0, DropdownFrame.AbsoluteSize.X, 0, 0)
-            TweenService:Create(FloatingFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, DropdownFrame.AbsoluteSize.X, 0, MaxHeight)}):Play()
+            TweenService:Create(FloatingFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, DropdownFrame.AbsoluteSize.X, 0, ExpandedHeight)}):Play()
         else
             TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = 0}):Play()
+            SearchBox.Text = "" -- إعادة تعيين البحث عند الاغلاق
             local closeTween = TweenService:Create(FloatingFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, DropdownFrame.AbsoluteSize.X, 0, 0)})
             closeTween:Play()
             closeTween.Completed:Wait()
