@@ -458,124 +458,49 @@ function AxisUI:CreateTab(Options)
 end
 
 -- ==========================================
--- 📂 SECTION MODULE (Collapsible)
+-- 🏷️ SECTION LABEL MODULE (Divider Style)
 -- ==========================================
 
 function AxisUI:CreateSection(ParentFrame, SectionName)
-    local isExpanded = false
-    local headerHeight = 36
-    
     local Container = Instance.new("Frame")
-    Container.Name = SectionName .. "_Section"
-    Container.Size = UDim2.new(1, 0, 0, headerHeight)
-    Container.BackgroundColor3 = THEME.BackgroundLight
-    Container.ClipsDescendants = true
+    Container.Name = SectionName .. "_SectionLabel"
+    -- ارتفاع 28: مسافة مناسبة فوق وتحت
+    Container.Size = UDim2.new(1, 0, 0, 28)
+    Container.BackgroundTransparency = 1
     Container.Parent = ParentFrame
-    
-    Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 6)
-    
-    local Stroke = Instance.new("UIStroke", Container)
-    Stroke.Color = THEME.Border
-    Stroke.Thickness = 1
-    Stroke.Transparency = 0.6
-    Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-    -- Header Button
-    local HeaderBtn = Instance.new("TextButton")
-    HeaderBtn.Size = UDim2.new(1, 0, 0, headerHeight)
-    HeaderBtn.BackgroundColor3 = THEME.BackgroundLight
-    HeaderBtn.AutoButtonColor = false
-    HeaderBtn.Text = ""
-    HeaderBtn.Parent = Container
-    
-    Instance.new("UICorner", HeaderBtn).CornerRadius = UDim.new(0, 6)
+    -- الخط الفاصل العلوي (اختياري - يعطي شكل احترافي)
+    local TopLine = Instance.new("Frame", Container)
+    TopLine.Size = UDim2.new(1, 0, 0, 1)
+    TopLine.Position = UDim2.new(0, 0, 0, 6)
+    TopLine.BackgroundColor3 = THEME.Border
+    TopLine.BackgroundTransparency = 0.5
+    TopLine.BorderSizePixel = 0
 
-    -- Arrow Icon
-    local Arrow = Instance.new("ImageLabel")
-    Arrow.Size = UDim2.new(0, 14, 0, 14)
-    Arrow.Position = UDim2.new(0, 12, 0.5, -7)
-    Arrow.BackgroundTransparency = 1
-    Arrow.Image = "rbxassetid://10392248278"
-    Arrow.ImageColor3 = THEME.TextSecondary
-    Arrow.Rotation = 0
-    Arrow.Parent = HeaderBtn
-
-    -- Title
+    -- النص في المنتصف (مثل: - [ Config ] -)
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -40, 1, 0)
-    Title.Position = UDim2.new(0, 32, 0, 0)
+    Title.Size = UDim2.new(1, 0, 1, 0)
     Title.BackgroundTransparency = 1
-    Title.Text = SectionName
-    Title.TextColor3 = THEME.TextPrimary
+    -- تنسيق النص: - [ الاسم ] -
+    Title.Text = "- [ " .. SectionName .. " ] -"
+    Title.TextColor3 = THEME.TextSecondary  -- رمادي فاتح (مثل الصورة)
+    -- أو استخدم THEME.TextPrimary للأبيض الكامل
     Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 13
+    Title.TextSize = 12
     Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Parent = HeaderBtn
+    -- محاذاة عمودية للمنتصف
+    Title.TextYAlignment = Enum.TextYAlignment.Center
+    Title.Parent = Container
 
-    -- Content Frame
-    local ContentFrame = Instance.new("Frame")
-    ContentFrame.Size = UDim2.new(1, 0, 0, 0)
-    ContentFrame.Position = UDim2.new(0, 0, 0, headerHeight)
-    ContentFrame.BackgroundTransparency = 1
-    ContentFrame.Parent = Container
-    
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Padding = UDim.new(0, 6)
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    UIListLayout.Parent = ContentFrame
+    -- الخط الفاصل السفلي (اختياري)
+    local BottomLine = Instance.new("Frame", Container)
+    BottomLine.Size = UDim2.new(1, 0, 0, 1)
+    BottomLine.Position = UDim2.new(0, 0, 1, -6)
+    BottomLine.BackgroundColor3 = THEME.Border
+    BottomLine.BackgroundTransparency = 0.5
+    BottomLine.BorderSizePixel = 0
 
-    local UIPadding = Instance.new("UIPadding")
-    UIPadding.PaddingTop = UDim.new(0, 8)
-    UIPadding.PaddingBottom = UDim.new(0, 8)
-    UIPadding.PaddingLeft = UDim.new(0, 10)
-    UIPadding.PaddingRight = UDim.new(0, 10)
-    UIPadding.Parent = ContentFrame
-
-    -- Section Label (shown when expanded - top left)
-    local SectionLabel = Instance.new("TextLabel")
-    SectionLabel.Size = UDim2.new(1, 0, 0, 20)
-    SectionLabel.BackgroundTransparency = 1
-    SectionLabel.Text = "▸ " .. SectionName
-    SectionLabel.TextColor3 = THEME.TextSecondary
-    SectionLabel.Font = Enum.Font.GothamBold
-    SectionLabel.TextSize = 11
-    SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-    SectionLabel.Visible = false
-    SectionLabel.Parent = ContentFrame
-
-    -- Interactions
-    HeaderBtn.MouseEnter:Connect(function()
-        TweenService:Create(HeaderBtn, TweenInfo.new(0.15), {BackgroundColor3 = THEME.BackgroundHover}):Play()
-    end)
-    
-    HeaderBtn.MouseLeave:Connect(function()
-        TweenService:Create(HeaderBtn, TweenInfo.new(0.15), {BackgroundColor3 = THEME.BackgroundLight}):Play()
-    end)
-    
-    HeaderBtn.MouseButton1Click:Connect(function()
-        isExpanded = not isExpanded
-        
-        TweenService:Create(Arrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Rotation = isExpanded and 90 or 0
-        }):Play()
-        
-        SectionLabel.Visible = isExpanded
-        
-        local targetHeight = isExpanded and (headerHeight + UIListLayout.AbsoluteContentSize.Y + 16) or headerHeight
-        
-        TweenService:Create(Container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(1, 0, 0, targetHeight)
-        }):Play()
-    end)
-    
-    UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        if isExpanded then
-            Container.Size = UDim2.new(1, 0, 0, headerHeight + UIListLayout.AbsoluteContentSize.Y + 16)
-        end
-    end)
-
-    return ContentFrame
+    return Container
 end
 
 -- ==========================================
